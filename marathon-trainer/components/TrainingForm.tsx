@@ -31,10 +31,67 @@ const TrainingForm: React.FC = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target
+    
+    // 处理时间输入验证
+    if ((name === 'currentPB' || name === 'targetPB') && value) {
+      const timeRange = getTimeRange(formData.raceType)
+      const inputTimeSeconds = timeToSeconds(value)
+      const minTimeSeconds = timeToSeconds(timeRange.min)
+      const maxTimeSeconds = timeToSeconds(timeRange.max)
+      
+      // 验证时间范围
+      if (inputTimeSeconds < minTimeSeconds || inputTimeSeconds > maxTimeSeconds) {
+        setError(`${getRaceTypeName(formData.raceType)}${name === 'currentPB' ? '当前PB' : '目标PB'}时间应在 ${timeRange.min} 到 ${timeRange.max} 之间`)
+      } else {
+        setError('')
+      }
+    }
+    
     setFormData(prev => ({
       ...prev,
       [name]: type === 'number' ? parseInt(value) : value
     }))
+  }
+
+  // 根据比赛类型获取时间范围
+  const getTimeRange = (raceType: FormData['raceType']) => {
+    switch (raceType) {
+      case 'full':
+        return { min: '02:00:00', max: '08:00:00' }
+      case 'half':
+        return { min: '01:00:00', max: '04:00:00' }
+      case '10k':
+        return { min: '00:30:00', max: '02:00:00' }
+      default:
+        return { min: '00:00:00', max: '23:59:59' }
+    }
+  }
+
+  // 获取比赛类型名称
+  const getRaceTypeName = (raceType: FormData['raceType']) => {
+    switch (raceType) {
+      case 'full':
+        return '全程马拉松'
+      case 'half':
+        return '半程马拉松'
+      case '10k':
+        return '10公里'
+      default:
+        return ''
+    }
+  }
+
+  // 将时间字符串转换为秒数
+  const timeToSeconds = (time: string): number => {
+    const [hours, minutes, seconds] = time.split(':').map(Number)
+    return hours * 3600 + minutes * 60 + (seconds || 0)
+  }
+
+  // 将秒数转换为时间字符串
+  const secondsToTime = (seconds: number): string => {
+    const hours = Math.floor(seconds / 3600)
+    const minutes = Math.floor((seconds % 3600) / 60)
+    return `${hours}:${minutes.toString().padStart(2, '0')}`
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,6 +100,45 @@ const TrainingForm: React.FC = () => {
     setError('')
 
     try {
+      // 验证 PB 时间范围
+      const currentPBSeconds = timeToSeconds(formData.currentPB)
+      const targetPBSeconds = timeToSeconds(formData.targetPB)
+      
+      // 根据比赛类型设置时间范围
+      let minTimeSeconds: number, maxTimeSeconds: number
+      switch (formData.raceType) {
+        case 'full':
+          minTimeSeconds = 2 * 3600 // 2小时
+          maxTimeSeconds = 8 * 3600 // 8小时
+          break
+        case 'half':
+          minTimeSeconds = 1 * 3600 // 1小时
+          maxTimeSeconds = 4 * 3600 // 4小时
+          break
+        case '10k':
+          minTimeSeconds = 0.5 * 3600 // 30分钟
+          maxTimeSeconds = 2 * 3600 // 2小时
+          break
+        default:
+          minTimeSeconds = 0
+          maxTimeSeconds = 24 * 3600
+      }
+      
+      // 验证当前 PB
+      if (currentPBSeconds < minTimeSeconds || currentPBSeconds > maxTimeSeconds) {
+        throw new Error(`${getRaceTypeName(formData.raceType)}当前PB时间范围应在 ${secondsToTime(minTimeSeconds)} 到 ${secondsToTime(maxTimeSeconds)} 之间`)
+      }
+      
+      // 验证目标 PB
+      if (targetPBSeconds < minTimeSeconds || targetPBSeconds > maxTimeSeconds) {
+        throw new Error(`${getRaceTypeName(formData.raceType)}目标PB时间范围应在 ${secondsToTime(minTimeSeconds)} 到 ${secondsToTime(maxTimeSeconds)} 之间`)
+      }
+      
+      // 验证目标 PB 不大于当前 PB
+      if (targetPBSeconds >= currentPBSeconds) {
+        throw new Error('目标PB应小于当前PB')
+      }
+
       const response = await fetch('/api/training', {
         method: 'POST',
         headers: {
@@ -102,9 +198,14 @@ const TrainingForm: React.FC = () => {
             name="currentPB"
             value={formData.currentPB}
             onChange={handleInputChange}
+            min={getTimeRange(formData.raceType).min}
+            max={getTimeRange(formData.raceType).max}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            {getRaceTypeName(formData.raceType)}时间范围: {getTimeRange(formData.raceType).min} - {getTimeRange(formData.raceType).max}
+          </p>
         </div>
 
         <div>
@@ -114,9 +215,14 @@ const TrainingForm: React.FC = () => {
             name="targetPB"
             value={formData.targetPB}
             onChange={handleInputChange}
+            min={getTimeRange(formData.raceType).min}
+            max={getTimeRange(formData.raceType).max}
             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             required
           />
+          <p className="text-xs text-gray-500 mt-1">
+            {getRaceTypeName(formData.raceType)}时间范围: {getTimeRange(formData.raceType).min} - {getTimeRange(formData.raceType).max}
+          </p>
         </div>
 
         <div>

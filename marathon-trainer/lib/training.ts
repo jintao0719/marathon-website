@@ -9,7 +9,7 @@ const timeToSeconds = (time: string): number => {
 // 将秒数转换为配速字符串 (分:秒/公里)
 const secondsToPace = (seconds: number): string => {
   const totalMinutes = Math.floor(seconds / 60)
-  const remainingSeconds = seconds % 60
+  const remainingSeconds = Math.round(seconds % 60) // 四舍五入到最近的秒
   return `${totalMinutes}:${remainingSeconds.toString().padStart(2, '0')}`
 }
 
