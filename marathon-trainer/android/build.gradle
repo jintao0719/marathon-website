@@ -3,8 +3,8 @@
 buildscript {
     
     ext {
-        compileSdkVersion = 36
-        targetSdkVersion = 36
+        compileSdkVersion = 34
+        targetSdkVersion = 34
         minSdkVersion = 22
         androidxAppCompatVersion = '1.6.1'
         androidxCoordinatorLayoutVersion = '1.2.0'
@@ -16,6 +16,10 @@ buildscript {
     }
     
     repositories {
+        // 使用阿里云镜像加速
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
+        maven { url 'https://maven.aliyun.com/repository/gradle-plugin' }
         google()
         mavenCentral()
     }
@@ -30,6 +34,9 @@ apply from: "variables.gradle"
 
 allprojects {
     repositories {
+        // 使用阿里云镜像加速
+        maven { url 'https://maven.aliyun.com/repository/public' }
+        maven { url 'https://maven.aliyun.com/repository/google' }
         google()
         mavenCentral()
     }
