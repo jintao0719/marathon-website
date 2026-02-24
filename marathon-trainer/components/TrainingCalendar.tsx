@@ -97,12 +97,57 @@ const TrainingCalendar: React.FC = () => {
     }
   }
 
+  // 导出训练计划为 CSV
+  const exportToCSV = () => {
+    if (!trainingPlan) return
+
+    // CSV 表头
+    let csvContent = "日期,训练类型,距离(公里),配速,周数\n"
+
+    // 添加训练数据
+    trainingPlan.weeks.forEach(week => {
+      week.sessions.forEach(session => {
+        const row = [
+          session.date,
+          getSessionTypeName(session.type),
+          session.distance,
+          session.pace,
+          week.number
+        ]
+        csvContent += row.join(',') + '\n'
+      })
+    })
+
+    // 创建 Blob 对象
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+
+    // 创建下载链接
+    const link = document.createElement('a')
+    link.setAttribute('href', url)
+    link.setAttribute('download', `马拉松训练计划_${new Date().toISOString().split('T')[0]}.csv`)
+    link.style.visibility = 'hidden'
+
+    // 触发下载
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
   return (
     <div className="bg-white rounded-lg shadow-md p-6">
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-xl font-semibold">训练计划日历</h2>
-        <div className="text-sm text-gray-500">
-          比赛日期: {new Date(trainingPlan.raceDate).toLocaleDateString('zh-CN')}
+        <div className="flex items-center space-x-4">
+          <div className="text-sm text-gray-500">
+            比赛日期: {new Date(trainingPlan.raceDate).toLocaleDateString('zh-CN')}
+          </div>
+          <button
+            onClick={exportToCSV}
+            className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+          >
+            导出 CSV
+          </button>
         </div>
       </div>
 
