@@ -1,5 +1,7 @@
 include ':app'
-include ':capacitor-android'
-project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
 
-apply from: 'capacitor.settings.gradle'
+// 暂时注释掉 capacitor-android 模块，因为需要额外的网络依赖
+// include ':capacitor-android'
+// project(':capacitor-android').projectDir = new File('../node_modules/@capacitor/android/capacitor')
+
+// apply from: 'capacitor.settings.gradle'
